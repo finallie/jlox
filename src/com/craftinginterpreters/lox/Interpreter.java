@@ -18,7 +18,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             @Override
             public Object call(Interpreter interpreter,
                                List<Object> arguments) {
-                return (double)System.currentTimeMillis() / 1000.0;
+                return (double) System.currentTimeMillis() / 1000.0;
             }
 
             @Override
@@ -66,37 +66,39 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         switch (expr.operator.type) {
             case GREATER:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left > (double)right;
+                return (double) left > (double) right;
             case GREATER_EQUAL:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left >= (double)right;
+                return (double) left >= (double) right;
             case LESS:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left < (double)right;
+                return (double) left < (double) right;
             case LESS_EQUAL:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left <= (double)right;
+                return (double) left <= (double) right;
             case MINUS:
                 checkNumberOperand(expr.operator, right);
-                return (double)left - (double)right;
-            case BANG_EQUAL: return !isEqual(left, right);
-            case EQUAL_EQUAL: return isEqual(left, right);
+                return (double) left - (double) right;
+            case BANG_EQUAL:
+                return !isEqual(left, right);
+            case EQUAL_EQUAL:
+                return isEqual(left, right);
             case PLUS:
                 if (left instanceof Double && right instanceof Double) {
-                    return (double)left + (double)right;
+                    return (double) left + (double) right;
                 }
 
                 if (left instanceof String && right instanceof String) {
-                    return (String)left + (String)right;
+                    return (String) left + (String) right;
                 }
                 throw new RuntimeError(expr.operator,
                         "Operands must be two numbers or two strings.");
             case SLASH:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left / (double)right;
+                return (double) left / (double) right;
             case STAR:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left * (double)right;
+                return (double) left * (double) right;
         }
 
         // Unreachable.
@@ -158,7 +160,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 return !isTruthy(right);
             case MINUS:
                 checkNumberOperand(expr.operator, right);
-                return -(double)right;
+                return -(double) right;
         }
 
         // Unreachable.
@@ -172,7 +174,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     private boolean isTruthy(Object object) {
         if (object == null) return false;
-        if (object instanceof Boolean) return (boolean)object;
+        if (object instanceof Boolean) return (boolean) object;
         return true;
     }
 
@@ -228,7 +230,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
-        LoxFunction function = new LoxFunction(stmt);
+        LoxFunction function = new LoxFunction(stmt, environment);
         environment.define(stmt.name.lexeme, function);
         return null;
     }
@@ -241,6 +243,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             execute(stmt.elseBranch);
         }
         return null;
+    }
+
+    @Override
+    public Void visitReturnStmt(Stmt.Return stmt) {
+        Object value = null;
+        if (stmt.value != null) value = evaluate(stmt.value);
+
+        throw new Return(value);
     }
 
     @Override
